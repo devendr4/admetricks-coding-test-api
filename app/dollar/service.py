@@ -7,14 +7,14 @@ from fastapi.responses import StreamingResponse
 from app.dollar.config import get_settings
 
 
-def fetch_yearly_data(year: int):
-    response = httpx.get(get_settings().api_url + str(year))
+def fetch_yearly_data(year: str):
+    response = httpx.get(get_settings().api_url + year)
     data = response.json()["serie"]
     return {"data": data}
 
 
-def generate_file(year: int, filetype: str):
-    response = httpx.get(get_settings().api_url + str(year))
+def generate_file(year: str, filetype: str):
+    response = httpx.get(get_settings().api_url + year)
     data = response.json()["serie"]
 
     df = pd.DataFrame.from_dict(data)
@@ -27,13 +27,14 @@ def generate_file(year: int, filetype: str):
     df["fecha"] = df["fecha"].dt.strftime("%d-%m-%Y")
     print(df)
 
+    filename = "usd_clp_rate_history_" + year
     # return either a csv file or an excel file depending
     # on the 'filetype' query param
     if filetype == "csv":
         return StreamingResponse(
             iter([df.to_csv(index=False)]),
             media_type="text/csv",
-            headers={"Content-Disposition": "attachment;filename=data.csv"},
+            headers={"Content-Disposition": "attachment;filename=" + filename + ".csv"},
         )
 
     if filetype == "xlsx":
@@ -43,5 +44,7 @@ def generate_file(year: int, filetype: str):
         return StreamingResponse(
             BytesIO(buffer.getvalue()),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": "attachment; filename=data.xlsx"},
+            headers={
+                "Content-Disposition": "attachment; filename=" + filename + ".xlsx"
+            },
         )
