@@ -1,6 +1,6 @@
 # Admetricks coding challenge API
 To run this project, you may either use Docker or create a virtual environment and install the dependencies locally.
-It's suggested to run using Docker because of the redis server, otherwise, you'll have to set up a redis server yourself.
+It's suggested to run it using Docker because of the redis server, otherwise, you'll have to set up a redis server yourself.
 
 
  Create a .env file with the following contents:
