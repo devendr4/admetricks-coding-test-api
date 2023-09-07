@@ -15,6 +15,15 @@ Install dependencies:
 
      API_URL=https://mindicador.cl/api/dolar/
 
+
 Run the server
 
     uvicorn app.main:app --reload
+
+Run the tests
+
+    pytest
+
+To run the project using Docker:
+
+    docker compose up --build
