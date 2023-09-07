@@ -3,5 +3,5 @@ uvicorn
 httpx
 pandas
 redis
-pyarrow
 pydantic-settings
+openpyxl
