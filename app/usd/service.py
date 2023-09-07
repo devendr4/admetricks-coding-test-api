@@ -1,3 +1,4 @@
+import traceback
 from io import BytesIO
 
 import httpx
@@ -6,6 +7,7 @@ from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 
 from app.usd.config import get_settings
+from app.usd.redis import redis_service
 
 
 def generate_file(df: pd.DataFrame, year: str, filetype: str):
@@ -36,31 +38,38 @@ def generate_file(df: pd.DataFrame, year: str, filetype: str):
 
 def fetch_usd_variation(year: str, filetype: str | None):
     try:
-        response = httpx.get(get_settings().api_url + year)
-        response.raise_for_status()
-        data = response.json()["serie"]
+        df = redis_service.get(year)
+        # checks if data is cacached on redis, if it isn't, query API
+        # and transform the data
+        if (df is None) or df.empty:
+            response = httpx.get(get_settings().api_url + year)
+            response.raise_for_status()
+            data = response.json()["serie"]
 
-        if not len(data):
-            raise Exception("No data was found")
+            if not len(data):
+                raise Exception("No data was found")
 
-        df = pd.DataFrame.from_dict(data)
+            df = pd.DataFrame.from_dict(data)
 
-        df = df.rename(columns={"fecha": "date", "valor": "value"})
-        df["date"] = pd.to_datetime(df.date)
-        df["date"] = df["date"].dt.strftime("%Y-%m-%d")
+            df = df.rename(columns={"fecha": "date", "valor": "value"})
+            df["date"] = pd.to_datetime(df.date)
+            df["date"] = df["date"].dt.strftime("%Y-%m-%d")
 
-        df["variation"] = round(df["value"] - df["value"].shift(-1), 4)
-        df = df.fillna(0)
-        if not filetype:
-            df = df.drop(columns=["value"])
+            df["variation"] = round(df["value"] - df["value"].shift(-1), 4)
+            df = df.fillna(0)
+
+            # save data to redis after transforming it
+            redis_service.set(year, df)
 
         # if filetype query param is present, generate file
-
         if filetype:
             df["variation_percentage"] = (
                 lambda x, y: round((x - y) / ((x + y) / 2) * 100, 3)
             )(df["value"], df["value"].shift(-1))
             return generate_file(df, year, filetype)
+
+        else:
+            df = df.drop(columns=["value"])
 
         return {"data": df.to_dict(orient="records")}
 
@@ -71,4 +80,5 @@ def fetch_usd_variation(year: str, filetype: str | None):
         raise HTTPException(status_code=404, detail=msg)
 
     except Exception as e:
+        print(traceback.format_exc())
         raise HTTPException(status_code=404, detail=str(e))
