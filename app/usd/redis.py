@@ -11,7 +11,14 @@ class CacheService:
         self.redis = redis.Redis(host=url, port=6379, db=0)
 
     def set(self, key: str, df: pd.DataFrame, expire=500):
-        return self.redis.set(key, pickle.dumps(df), expire)
+        return self.redis.set(
+            key,
+            pickle.dumps(df),
+            # since the key is the year of the data retrieved,
+            # set longer expiration date for years previous to 2023
+            # since that data won't be changing
+            3600 if int(key) < 2023 else expire,
+        )
 
     def get(self, key: str):
         buffer = self.redis.get(key)
