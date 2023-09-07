@@ -5,3 +5,4 @@ pandas
 redis
 pydantic-settings
 openpyxl
+pytest
