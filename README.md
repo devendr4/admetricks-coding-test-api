@@ -1,5 +1,20 @@
 # Admetricks coding challenge API
-To run this project, you may either use Docker or create a virtual environment and install the dependencies yourself:
+To run this project, you may either use Docker or create a virtual environment and install the dependencies locally.
+It's suggested to run using Docker because of the redis server, otherwise, you'll have to set up a redis server yourself.
+
+
+ Create a .env file with the following contents:
+
+     API_URL=https://mindicador.cl/api/dolar/
+
+To run the project using Docker:
+
+    docker compose up --build
+
+To run the unit tests using docker:
+
+    docker exec -ti <container id> bash
+    pytest
 
 To create a virtual environment run:
 
@@ -7,13 +22,10 @@ To create a virtual environment run:
 Activate the virtual environment:
 
     source  .venv/bin/activate
+
 Install dependencies:
 
     pip install -r requirements.txt
-
- Create a .env file with the following contents:
-
-     API_URL=https://mindicador.cl/api/dolar/
 
 
 Run the server
@@ -23,7 +35,3 @@ Run the server
 Run the tests
 
     pytest
-
-To run the project using Docker:
-
-    docker compose up --build
