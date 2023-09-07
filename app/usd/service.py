@@ -45,18 +45,21 @@ def fetch_usd_variation(year: str, filetype: str | None):
 
         df = pd.DataFrame.from_dict(data)
 
-        df = df.rename(columns={"fecha": "date"})
-
+        df = df.rename(columns={"fecha": "date", "valor": "value"})
         df["date"] = pd.to_datetime(df.date)
         df["date"] = df["date"].dt.strftime("%Y-%m-%d")
 
-        df["variation"] = round(df["valor"] - df["valor"].shift(-1), 4)
+        df["variation"] = round(df["value"] - df["value"].shift(-1), 4)
         df = df.fillna(0)
         if not filetype:
-            df = df.drop(columns=["valor"])
+            df = df.drop(columns=["value"])
 
         # if filetype query param is present, generate file
+
         if filetype:
+            df["variation_percentage"] = (
+                lambda x, y: round((x - y) / ((x + y) / 2) * 100, 3)
+            )(df["value"], df["value"].shift(-1))
             return generate_file(df, year, filetype)
 
         return {"data": df.to_dict(orient="records")}
