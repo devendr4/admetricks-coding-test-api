@@ -23,3 +23,7 @@ Run the server
 Run the tests
 
     pytest
+
+To run the project using Docker:
+
+    docker compose up --build
