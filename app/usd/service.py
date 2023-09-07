@@ -1,3 +1,4 @@
+import traceback
 from io import BytesIO
 
 import httpx
@@ -6,6 +7,7 @@ from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 
 from app.usd.config import get_settings
+from app.usd.redis import redis_service
 
 
 def generate_file(df: pd.DataFrame, year: str, filetype: str):
@@ -36,6 +38,11 @@ def generate_file(df: pd.DataFrame, year: str, filetype: str):
 
 def fetch_usd_variation(year: str, filetype: str | None):
     try:
+        df = redis_service.get(year)
+        print("redis", df)
+        if df:
+            return {"data": df.to_dict(orient="records")}
+
         response = httpx.get(get_settings().api_url + year)
         response.raise_for_status()
         data = response.json()["serie"]
@@ -59,6 +66,8 @@ def fetch_usd_variation(year: str, filetype: str | None):
         if filetype:
             return generate_file(df, year, filetype)
 
+        redis_service.set(year, df)
+
         return {"data": df.to_dict(orient="records")}
 
     except httpx.HTTPStatusError as e:
@@ -68,4 +77,5 @@ def fetch_usd_variation(year: str, filetype: str | None):
         raise HTTPException(status_code=404, detail=msg)
 
     except Exception as e:
+        print(traceback.format_exc())
         raise HTTPException(status_code=404, detail=str(e))
