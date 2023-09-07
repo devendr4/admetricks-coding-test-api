@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from app.dollar.service import fetch_yearly_data, generate_file
 
-router = APIRouter(prefix="/v1/dollar")
+router = APIRouter(prefix="/v1/usd")
 
 
 @router.get("/{year}")
