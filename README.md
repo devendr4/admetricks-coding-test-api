@@ -1,4 +1,4 @@
-# Admetricks coding challenge API
+# CLP to USD rate API
 To run this project, you may either use Docker or create a virtual environment and install the dependencies locally.
 It's suggested to run it using Docker because of the redis server, otherwise, you'll have to set up a redis server yourself.
 
